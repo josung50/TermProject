@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:background="@android:mipmap/sym_def_app_icon"
+        android:id="@+id/frameLayout2"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true">
+
+    </FrameLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/View1"
+        android:hint="평"
+        android:layout_below="@+id/frameLayout2"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:text="음식 이름" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/View2"
+        android:layout_below="@+id/View1"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:text="가격" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="600dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/View3"
+        android:layout_below="@+id/View2"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:text="작성자 평" />
+</RelativeLayout>

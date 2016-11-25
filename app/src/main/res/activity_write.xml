@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:id="@+id/frameLayout">
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/imageView"
+            android:layout_gravity="left|top"
+            android:src="@android:drawable/ic_menu_camera"
+            android:onClick="CameraButton"/>
+
+    </FrameLayout>
+
+    <Spinner
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:id="@+id/spinner1"
+        android:spinnerMode="dialog"
+        android:entries="@array/spinnerArray1"
+        android:layout_below="@+id/frameLayout"
+        android:layout_alignParentStart="true" />
+
+    <Spinner
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:id="@+id/spinner2"
+        android:spinnerMode="dialog"
+        android:entries="@array/spinnerArray2"
+        android:layout_below="@+id/frameLayout"
+        android:layout_toEndOf="@+id/spinner1" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/FoodName"
+        android:layout_below="@+id/spinner1"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:hint="음식 이름(명칭)" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/FoodPrice"
+        android:hint="가격"
+        android:layout_below="@+id/FoodName"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:inputType="number"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="600dp"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/FoodComment"
+        android:hint="작성자 평"
+        android:layout_below="@+id/FoodPrice"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <ImageButton
+        android:layout_width="120dp"
+        android:layout_height="50dp"
+        android:id="@+id/imageButton"
+        android:layout_below="@+id/frameLayout"
+        android:layout_alignParentEnd="true"
+        android:background="@android:drawable/ic_menu_send"
+        android:onClick="SendButton"/>
+</RelativeLayout>
