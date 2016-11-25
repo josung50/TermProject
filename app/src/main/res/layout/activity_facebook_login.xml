@@ -18,4 +18,12 @@
         android:layout_height="wrap_content"
         />
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="접속"
+        android:id="@+id/Connect"
+        android:onClick="Connect"
+        android:layout_gravity="center_horizontal" />
+
 </LinearLayout>
