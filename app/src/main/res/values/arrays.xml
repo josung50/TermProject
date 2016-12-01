@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="spinnerArray1">
+        <item>[Big]</item>
+        <item>Korean</item>
+        <item>Chinese</item>
+        <item>Japanese</item>
+        <item>Western</item>
+        <item>And So on</item>
+    </string-array>
+
+    <string-array name="spinnerArray2">
+        <item>[Small]</item>
+        <item>desert</item>
+        <item>Fried</item>
+        <item>Flour Based</item>
+        <item>Soup</item>
+        <item>Rice</item>
+        <item>Noodle</item>
+        <item>Bread</item>
+        <item>Beverage</item>
+        <item>Drink</item>
+    </string-array>
+</resources>
