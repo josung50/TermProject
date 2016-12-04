@@ -1,40 +1,48 @@
 package opensource.termproject;
 
-import android.*;
 import android.Manifest;
 import android.content.Context;
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Build;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
+import android.support.v4.app.FragmentActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.CameraUpdateFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Locale;
+import java.lang.Double.*;
 
 public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
 
     private final int ID_REQUEST_PERMISSION = 0x00;
     public static int flag_FINE_LOCATION = 0;
     public static int flag_COARSE_LOCATION = 0;
+    public static int flag_CAMERA = 0;
+    public static int flag_WRITE_EXTERNAL_STORAGE = 0;
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     static MapFragment mapFragment;
@@ -42,6 +50,11 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
 
     static double latitude = 0.0;
     static double longitude = 0.0;
+
+    public static String[] list; // DB의 결과를 받아오는 변수
+
+    public static String[] temp;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +64,9 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
         // 권한
         String[] REQUEST_PERMISSIONS = {
                 android.Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(REQUEST_PERMISSIONS, ID_REQUEST_PERMISSION);
@@ -60,7 +75,6 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
         mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
     }//
 
     @Override
@@ -68,12 +82,20 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
         mMap = map;
 
         // 마커의 윈도우 클릭하면 확대
-        /*map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
+        map.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
+                String MustSplit = marker.getSnippet(); // index를 추출해야 한다.
+                String[] split = MustSplit.split("\n");
+
+                Intent intent = new Intent(GoogleMaps.this, WindowView.class);
+                intent.putExtra("index" , split[1]);
+                Log.d("MustSplit", "string: " + split[1]);
+                startActivity(intent);
             }
         });
 
+        /*
         // map 터치 시
         map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
             @Override
@@ -158,7 +180,7 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
 
             if (permission[0] == android.Manifest.permission.ACCESS_FINE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i("플래그fine" , "설정");
+                Log.i("flag_FINE_LOCATION" , "설정");
                 flag_FINE_LOCATION = 1;
             }
             else if (permission[0] == android.Manifest.permission.ACCESS_FINE_LOCATION &&
@@ -169,7 +191,7 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
 
             if (permission[1] == android.Manifest.permission.ACCESS_COARSE_LOCATION &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.i("플래그corse" , "설정");
+                Log.i("flag_COARES_LOCATION" , "설정");
                 flag_COARSE_LOCATION = 1;
             }
             else if (permission[1] == android.Manifest.permission.ACCESS_COARSE_LOCATION &&
@@ -178,14 +200,37 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
                 finish();
             }
 
+            if (permission[2] == Manifest.permission.CAMERA &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i("flag_CAMERA", "설정");
+                flag_CAMERA = 1;
+            }
+            else if (permission[2] == Manifest.permission.CAMERA &&
+                    grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                Toast.makeText(this, "Plz allows permissions5", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+            if (permission[3] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i("flag_WRITE_EXTERNAL_STORAGE", "설정");
+                flag_CAMERA = 1;
+            }
+            else if (permission[3] == Manifest.permission.WRITE_EXTERNAL_STORAGE &&
+                    grantResults[0] == PackageManager.PERMISSION_DENIED) {
+                Toast.makeText(this, "Plz allows permissions6", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
             super.onRequestPermissionsResult(requestCode, permission, grantResults);
+            flag_WRITE_EXTERNAL_STORAGE = 1;
             flag_COARSE_LOCATION = 1;
             flag_FINE_LOCATION = 1;
+            flag_CAMERA = 1;
         }
     }
 
     private boolean checkPermission() {
-        if (flag_FINE_LOCATION == 0 && flag_COARSE_LOCATION == 0)
+        if (flag_FINE_LOCATION == 0 && flag_COARSE_LOCATION == 0 && flag_CAMERA == 0 && flag_WRITE_EXTERNAL_STORAGE == 0)
             return true;
         else
             return false;
@@ -194,7 +239,7 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
     // 좌표로 주소 얻기
     public static String getAddress(Context mContext, double lat, double lng) {
         String LocationName = "";
-        Geocoder geocoder = new Geocoder(mContext, Locale.KOREAN);
+        Geocoder geocoder = new Geocoder(mContext, Locale.US);
         List<Address> address;
         try {
             // 한 좌표에 대해 두개 이상의 이름이 존재 할 수 있기에
@@ -211,5 +256,109 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
             Toast.makeText(mContext, "Can't find address." , Toast.LENGTH_LONG).show();
         }
         return LocationName;
+    }
+
+    // 현재 위치 기준으로 500M 반경 검색
+    public void CurrentLocationButton(View v) {
+        startLocationService();
+        LatLng CP = new LatLng(latitude, longitude);
+        mMap.clear();
+        Log.d("latlng","latlng:"+latitude+" "+longitude);
+        if(longitude == 0 || latitude == 0) {
+            Toast.makeText(getApplicationContext(), "현재 위치를 알 수 없습니다. 다시 시도해 주세요.", Toast.LENGTH_LONG).show();
+            return;
+        }
+        else {
+            new HttpTask().execute(); // 문자열 정보 전송
+            if(list == null) {
+                Toast.makeText(getApplicationContext(), "등록된 맛집이 없네요.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            Marker marker = mMap.addMarker(new MarkerOptions()
+                    .position(CP)
+                    .title("Current:"+getAddress(this, latitude, longitude)));
+            marker.showInfoWindow();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(CP,17.0f));
+
+            for (int i = 0; i < list.length; i++) {
+                temp = split(list[i]); // 1/1360872253931928/37.5619148/126.8570243/368000/computer/good job/1482 Gayang-dong/Japanese/Rice/1360872253931928_2016_12_05_02_14_2
+                                           //  0   1               2           3           4       5       6       7                   8      9    10
+                marker = mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(Double.parseDouble(temp[2]),Double.parseDouble(temp[3])))
+                        .title("FoodName: "+temp[5]+"    Price: "+temp[4])
+                        .snippet(".\n"+ i));
+                Log.d("list", "list" + i + ":" + list[i]);
+                }
+        }
+    }
+
+    // 글 작성 버튼
+    public void WriteButton(View v) {
+        startLocationService(); // 위도경도 얻어옴
+        if(longitude == 0.0 || latitude == 0.0)
+            Toast.makeText(getApplicationContext(), "현재 위치를 알 수 없습니다. 다시 시도해 주세요." , Toast.LENGTH_LONG).show();
+        else {
+            Intent intent = new Intent(GoogleMaps.this, Write.class);
+            startActivity(intent);
+        }
+    }
+
+
+    // PHP 검색 쿼리 보내는 class
+    class HttpTask extends AsyncTask<String,Void,String> {
+        /* Bitmap bitmap , String image는 전역변수 */
+        protected String doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            try{
+                String urlPath = "http://54.187.131.242/ryong/db3.php";
+
+                String data = "lat=" + latitude;
+                data += "&lng=" + longitude;
+
+                URL url = new URL(urlPath);
+                URLConnection conn = url.openConnection();
+
+                conn.setDoOutput(true);
+                OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+
+                // 문자열 전송
+                wr.write(data);
+                wr.flush();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                StringBuilder sb = new StringBuilder();
+                String line = null;
+
+                while((line = reader.readLine()) != null) {
+                    sb.append(line);
+                    break;
+                }
+                //Log.d("디버깅현재위치", "답:" + latitude + " " + longitude);
+                Log.d("디버깅쿼리3", "test:" + sb.toString()); // 1/1360872253931928/37.5619148/126.8570243/368000/computer/good job/1482 Gayang-dong/Japanese/Rice/1360872253931928_2016_12_05_02_14_2////
+                list=sb.toString().split("////");
+                return sb.toString();
+
+            }catch(UnsupportedEncodingException e){
+                e.printStackTrace();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+            //오류시 null 반환
+            return null;
+        }
+
+        //asyonTask 3번째 인자와 일치 매개변수값 -> doInBackground 리턴값이 전달됨
+        //AsynoTask 는 preExcute - doInBackground - postExecute 순으로 자동으로 실행됩니다.
+        //ui는 여기서 변경
+        protected void onPostExecute(String value){
+            super.onPostExecute(value);
+        }
+    }
+
+    // list를 /단위로 끊어서 반환
+    public String[] split(String temp123) {
+        String[] temp2 = temp123.split("/");
+        return temp2;
     }
 }

@@ -71,6 +71,11 @@ public class Write extends Activity {
     //ProgressDialog dialog = null; // 업로드 로딩바
     int serverResponseCode = 0; // 서버 상태 반환
 
+    // 서버에 저장 될 파일명 -> 작성자 페이스북 id_xx_xx_xx.jpg
+    Date d = new Date();
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+    String nameTophp = Login.LR.getAccessToken().getUserId() +"_"+ sdf.format(d).toString() + ".jpg";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,7 +131,7 @@ public class Write extends Activity {
         //Log.d("데이터" , "대분류:" + BigOption + " 소분류:" + SmallOption);
         //Log.d("데이터2", "이름:" + FoodName + " 가격:" + FoodPrice + " 코멘트:" + FoodComment);
 
-        if(FoodName == null || FoodPrice == null || FoodComment == null || flag_Camera_image == 0 || BigOption == null)
+        if(FoodName == null || FoodPrice == null || FoodComment == null || flag_Camera_image == 0 || BigOption == "[Big]")
             Toast.makeText(getApplicationContext(), "빈 칸 없이 채워주세요.", Toast.LENGTH_LONG).show();
         else {
             new HttpTask().execute(FoodPrice, FoodName, FoodComment, Location, BigOption, SmallOption); // 문자열 정보 전송
@@ -186,6 +191,7 @@ public class Write extends Activity {
                 data += "&" + URLEncoder.encode("_Location", "UTF-8") + "=" + URLEncoder.encode(_Location, "UTF-8");
                 data += "&" + URLEncoder.encode("_BigOption", "UTF-8") + "=" + URLEncoder.encode(_BigOption, "UTF-8");
                 data += "&" + URLEncoder.encode("_SmallOption", "UTF-8") + "=" + URLEncoder.encode(_SmallOption, "UTF-8");
+                data += "&" + URLEncoder.encode("_FilePath", "UTF-8") + "=" + URLEncoder.encode(nameTophp, "UTF-8");
 
                 URL url = new URL(urlPath);
                 URLConnection conn = url.openConnection();
@@ -280,11 +286,6 @@ public class Write extends Activity {
                 conn.setRequestProperty("ENCTYPE", "multipart/form-data");
                 conn.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
                 conn.setRequestProperty("uploaded_file", fileName);
-
-                // 서버에 저장 될 파일명 -> 작성자 페이스북 id_xx_xx_xx.jpg
-                Date d = new Date();
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd");
-                String nameTophp = Login.LR.getAccessToken().getUserId() +"_"+ sdf.format(d).toString() + ".jpg";
 
                 dos = new DataOutputStream(conn.getOutputStream());
                 dos.writeBytes(twoHyphens + boundary + lineEnd);

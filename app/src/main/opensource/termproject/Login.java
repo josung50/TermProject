@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
@@ -43,7 +44,7 @@ public class Login extends Activity {
 
     // 프로필 사진 관련
     ImageView imageview;
-    Bitmap profilepic;
+    static Bitmap profilepic; // 프로필 사진을 닮고 있다.
 
 
     @Override
@@ -64,9 +65,9 @@ public class Login extends Activity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) { //로그인 성공시 호출되는 메소드
-                Log.e("토큰", loginResult.getAccessToken().getToken());
-                Log.e("유저아이디", loginResult.getAccessToken().getUserId());
-                Log.e("퍼미션 리스트", loginResult.getAccessToken().getPermissions() + "");
+                Log.d("토큰", loginResult.getAccessToken().getToken());
+                Log.d("유저아이디", loginResult.getAccessToken().getUserId());
+                Log.d("퍼미션 리스트", loginResult.getAccessToken().getPermissions() + "");
 
                 //loginResult.getAccessToken() 정보를 가지고 유저 정보를 가져올수 있습니다.
                 GraphRequest request = GraphRequest.newMeRequest(loginResult.getAccessToken(),
@@ -74,8 +75,8 @@ public class Login extends Activity {
                             @Override
                             public void onCompleted(JSONObject object, GraphResponse response) {
                                 try {
-                                    Log.e("user profile", object.toString());
-                                    Log.e("이름",object.getString("name"));
+                                    Log.d("user profile", object.toString());
+                                    Log.d("이름",object.getString("name"));
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -83,6 +84,8 @@ public class Login extends Activity {
                         });
 
                 LR = loginResult;
+
+                //프로필 사진 가져오기//
                 profilepic = getUserPic(LR.getAccessToken().getUserId());
                 imageview.setImageBitmap(profilepic);
                 request.executeAsync();
@@ -117,7 +120,7 @@ public class Login extends Activity {
         HttpURLConnection connection = null;
         String imageURL;
         imageURL = "http://graph.facebook.com/"+userID+"/picture?type=large";
-        Log.e("이미지",imageURL);
+        Log.e("이미지", imageURL);
         try {
             URL url = new URL(imageURL);
             connection = (HttpURLConnection) url.openConnection();
@@ -143,5 +146,15 @@ public class Login extends Activity {
             Log.e("이미지","커밋성공");
             if(connection!=null)connection.disconnect();
         }//
+    }
+
+    // 선택된 계정으로 접속하기
+    public void Connect(View v) {
+        if(LR != null) {
+            Intent intent = new Intent(Login.this, GoogleMaps.class);
+            startActivity(intent);
+        }
+        else
+            Toast.makeText(getApplication(), "로그인을 해주세요.", Toast.LENGTH_LONG).show();
     }
 }
