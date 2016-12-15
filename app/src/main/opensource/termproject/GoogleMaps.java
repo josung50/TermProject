@@ -1,6 +1,7 @@
 package opensource.termproject;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -12,9 +13,13 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Telephony;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.GoogleMap;
@@ -28,6 +33,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
@@ -35,6 +41,7 @@ import java.net.URLConnection;
 import java.util.List;
 import java.util.Locale;
 import java.lang.Double.*;
+import java.util.Objects;
 
 public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
 
@@ -52,9 +59,8 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
     static double longitude = 0.0;
 
     public static String[] list; // DB의 결과를 받아오는 변수
-
     public static String[] temp;
-
+    public static String tp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +81,9 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
         mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        Write.BigOption = "Big";
+        Write.SmallOption= "Small";
     }//
 
     @Override
@@ -270,6 +279,12 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
         }
         else {
             new HttpTask().execute(); // 문자열 정보 전송
+            // 데이터 받아오는 시간 벌기 //
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             if(list == null) {
                 Toast.makeText(getApplicationContext(), "등록된 맛집이 없네요.", Toast.LENGTH_LONG).show();
                 return;
@@ -328,16 +343,28 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
                 BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 
                 StringBuilder sb = new StringBuilder();
+                String CheckNull = "0";
                 String line = null;
 
                 while((line = reader.readLine()) != null) {
                     sb.append(line);
                     break;
                 }
-                //Log.d("디버깅현재위치", "답:" + latitude + " " + longitude);
+
+                CheckNull = sb.toString();
+                Log.d("디버깅현재위치", "답:" + latitude + " " + longitude + " " + CheckNull);
                 Log.d("디버깅쿼리3", "test:" + sb.toString()); // 1/1360872253931928/37.5619148/126.8570243/368000/computer/good job/1482 Gayang-dong/Japanese/Rice/1360872253931928_2016_12_05_02_14_2////
-                list=sb.toString().split("////");
-                return sb.toString();
+
+                if(sb.toString() != "") {
+                    Log.d("디버깅123", "sb.toString:"+sb.toString());
+                    list = sb.toString().split("////");
+                    Log.d("list??" , "list:"+list);
+                    return sb.toString();
+                }
+                else {
+                    Log.d("지나감","ㅇㅇ");
+                    return null;
+                }
 
             }catch(UnsupportedEncodingException e){
                 e.printStackTrace();
@@ -360,5 +387,133 @@ public class GoogleMaps extends FragmentActivity implements OnMapReadyCallback{
     public String[] split(String temp123) {
         String[] temp2 = temp123.split("/");
         return temp2;
+    }
+
+    // 검색 버튼
+    public void SearchButton(View v) {
+        EditText Ed = (EditText) findViewById(R.id.search);
+        if ( Ed.length() == 0)
+            tp = "null";
+        else
+            tp = Ed.getText().toString();
+        Log.d("tp" , "tp의 값:" + tp);
+
+        // 스피터 변수 받아오기
+        //스피너//
+        Spinner s1 = (Spinner)findViewById(R.id.BigOptionButton); // 음식 대분류
+        s1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                Write.BigOption = parent.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        Spinner s2 = (Spinner)findViewById(R.id.SmallOptionButton); // 음식 소분류
+        s2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view,
+                                       int position, long id) {
+                Write.SmallOption = parent.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        Log.d("스피너" , "big:" + Write.BigOption + "  small:" + Write.SmallOption);
+
+        new HttpTask2().execute(); // 쿼리 전송 (Big ,Small을 포함한)
+        try {
+            Thread.sleep(500); // 데이터 받아오는 시간 딜레이
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        if(list == null) {
+            Toast.makeText(getApplicationContext(), "등록된 맛집이 없네요.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        mMap.clear();
+        Marker marker = null;
+        for (int i = 0; i < list.length; i++) {
+            temp = split(list[i]); // 1/1360872253931928/37.5619148/126.8570243/368000/computer/good job/1482 Gayang-dong/Japanese/Rice/1360872253931928_2016_12_05_02_14_2
+            //  0   1               2           3           4       5       6       7                   8      9    10
+            marker = mMap.addMarker(new MarkerOptions()
+                    .position(new LatLng(Double.parseDouble(temp[2]),Double.parseDouble(temp[3])))
+                    .title("FoodName: "+temp[5]+"    Price: "+temp[4])
+                    .snippet(".\n"+ i));
+            Log.d("list22", "list" + i + ":" + list[i]);
+        }
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(Double.parseDouble(temp[2]),Double.parseDouble(temp[3])), 17.0f));
+        marker.showInfoWindow();
+    }
+
+    // PHP 검색 쿼리 보내는 class - Big , Small option을 통한 검색
+    class HttpTask2 extends AsyncTask<String,Void,String> {
+        /* Bitmap bitmap , String image는 전역변수 */
+        protected String doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            try{
+                String urlPath = "http://54.187.131.242/ryong/db4.php";
+
+                String data = "BigOption=" + Write.BigOption;
+                data += "&SmallOption=" + Write.SmallOption;
+                data += "&TP=" + tp;
+                Log.d("임시데이터" , data);
+                URL url = new URL(urlPath);
+                URLConnection conn = url.openConnection();
+
+                conn.setDoOutput(true);
+                OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+
+                // 문자열 전송
+                wr.write(data);
+                wr.flush();
+
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+
+                StringBuilder sb = new StringBuilder();
+                String CheckNull = "0";
+                String line = null;
+
+                while((line = reader.readLine()) != null) {
+                    sb.append(line);
+                    break;
+                }
+
+                CheckNull = sb.toString();
+                Log.d("디버깅쿼리4", "test:" + sb.toString()); // 1/1360872253931928/37.5619148/126.8570243/368000/computer/good job/1482 Gayang-dong/Japanese/Rice/1360872253931928_2016_12_05_02_14_2////
+
+                if(sb.toString() != "") {
+                    list = sb.toString().split("////");
+                    return sb.toString();
+                }
+                else {
+                    Log.d("지나감","ㅇㅇ");
+                    return null;
+                }
+
+            }catch(UnsupportedEncodingException e){
+                e.printStackTrace();
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+            //오류시 null 반환
+            return null;
+        }
+
+        //asyonTask 3번째 인자와 일치 매개변수값 -> doInBackground 리턴값이 전달됨
+        //AsynoTask 는 preExcute - doInBackground - postExecute 순으로 자동으로 실행됩니다.
+        //ui는 여기서 변경
+        protected void onPostExecute(String value){
+            super.onPostExecute(value);
+        }
     }
 }

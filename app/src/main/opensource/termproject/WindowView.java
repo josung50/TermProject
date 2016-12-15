@@ -22,8 +22,8 @@ import java.net.URL;
  */
 public class WindowView extends Activity {
 
-    ImageView imageView2;
-    TextView v1,v2,v3; // 음식이름, 가격, 코멘트
+    ImageView imageView2 , imageView3;
+    TextView v1,v2,v3, v4; // 음식이름, 가격, 코멘트
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,15 +37,18 @@ public class WindowView extends Activity {
         //  0   1               2           3           4       5       6       7                   8      9    10 변수는 GoogleMaps의 temp 이용
 
         imageView2 = (ImageView) findViewById(R.id.imageView2);
+        imageView3 = (ImageView) findViewById(R.id.imageView3);
         v1 = (TextView) findViewById(R.id.View1);
         v2 = (TextView) findViewById(R.id.View2);
         v3 = (TextView) findViewById(R.id.View3);
+        v4 = (TextView) findViewById(R.id.View4);
 
         getPic();
         v1.setText("Food Name: " + GoogleMaps.temp[5]);
         v2.setText("Food Price: " + GoogleMaps.temp[4]);
-        v3.setText("Comment: " + GoogleMaps.temp[6]);
-
+        v3.setText(GoogleMaps.temp[6]);
+        v4.setText(GoogleMaps.temp[1]);
+        getUserPic(GoogleMaps.temp[1]); // 작성자 사진 가져오기
     }
 
     public Bitmap getPic() {
@@ -71,6 +74,41 @@ public class WindowView extends Activity {
             myBitmap = Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true);
             imageView2.setImageBitmap(myBitmap);
 
+            Log.e("이미지", "성공" + myBitmap);
+            return myBitmap;
+        } catch (IOException e) {
+            Log.e("이미지" , "실패");
+            e.printStackTrace();
+            return null;
+        }finally{
+            Log.e("이미지","커밋성공");
+            if(connection!=null)connection.disconnect();
+        }//
+    }
+
+    public Bitmap getUserPic(String userID) {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+
+        HttpURLConnection connection = null;
+        String imageURL;
+        imageURL = "http://graph.facebook.com/"+userID+"/picture?type=large";
+        Log.e("이미지", imageURL);
+        try {
+            URL url = new URL(imageURL);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            Log.e("URL" , connection.getHeaderField("Location"));
+            imageURL = connection.getHeaderField("Location");
+            URL url2 = new URL(imageURL);
+            connection.disconnect();
+            connection = (HttpURLConnection) url2.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            BufferedInputStream bis = new BufferedInputStream(connection.getInputStream());
+            Bitmap myBitmap = BitmapFactory.decodeStream(bis);
+            imageView3.setImageBitmap(myBitmap);
             Log.e("이미지", "성공" + myBitmap);
             return myBitmap;
         } catch (IOException e) {
